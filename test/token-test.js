@@ -32,8 +32,8 @@ describe("Wallet", function () {
     expect(0).to.equal(await wallet.balances(owner.address, tick));
 
 
-    // await aave.connect(owner.address).approve(wallet.address, 500);
-    // await wallet.deposit(tick, 500);
+    // await aave.connect(owner.address).approve(addr1.address, 500);
+    // await wallet.connect(addr1.address).deposit(tick, 500);
 
     // expect(500).to.equal(await wallet.balances(owner.address, tick));
 
