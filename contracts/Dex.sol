@@ -11,6 +11,7 @@ contract Dex is wallet{
         bytes32 ticker;
         uint amount;
         uint price;
+        uint filled;
     }
 
     uint private nextOrderId  = 0;
@@ -33,7 +34,7 @@ contract Dex is wallet{
 
         Order[] storage orders = orderBook[ticker][uint(side)];
         orders.push(
-            Order(nextOrderId, msg.sender, side, ticker, amount, price));
+            Order(nextOrderId, msg.sender, side, ticker, amount, price, 0));
    
     //BubbleSort
     bool isSwapped;
@@ -76,4 +77,93 @@ contract Dex is wallet{
     nextOrderId++;
     }
 
-}   
+    function createMarketOrder(Side side, bytes32 ticker, uint amount) public {
+        uint orderBookSide;
+        uint totalFilled;
+        uint filled;
+
+        if(side == Side.BUY)
+        orderBookSide = 1;
+        else{
+            orderBookSide = 0;
+        }
+
+        Order[] storage orders = orderBook[ticker][orderBookSide];
+        uint i;
+        for(i =0; i<orders.length && totalFilled < amount; i++)
+        {
+            if(orders[i].amount >= (amount - totalFilled))
+            {
+                orders[i].filled = amount - totalFilled;
+                filled = amount- totalFilled;
+                totalFilled = amount;
+            }
+            else {
+                filled = orders[i].amount;
+            totalFilled += orders[i].amount;
+            // orders[i].filled = orders[i].amount;
+            }
+
+        if(side == Side.BUY)
+        {
+            require(balances[msg.sender]["ETH"] >= filled*orders[i].price);
+            //Execute trade
+            //transfer token to buyer in the dex
+            balances[msg.sender][ticker] += filled;
+            balances[orders[i].trader][ticker] -= filled;
+
+            //transfer eth to seller of token in the dex
+            balances[msg.sender]["ETH"] -= filled;
+            balances[orders[i].trader]["ETH"] += filled;
+        }
+        else if(side==Side.SELL) {
+            
+            require(balances[msg.sender][ticker] >= filled);
+            //Execute trade
+            //transfer token to buyer in the dex
+            balances[msg.sender][ticker] -= filled;
+            balances[orders[i].trader][ticker] += filled;
+
+            //transfer eth to seller of token in the dex
+            balances[msg.sender]["ETH"] += filled;
+            balances[orders[i].trader]["ETH"] -= filled;
+        }
+
+    }
+            //Remove filled orders
+            Order[] memory ordersToDelete = new Order[](i);
+            
+            uint j;
+            uint toShift;
+            for(j=0; j<i; j++)
+            {
+                if(j==i-1)
+                {
+                    if(orders[j].filled == amount)
+                    {ordersToDelete[j]=orders[j];
+                    toShift=j;}
+                    else{
+                        toShift=j-1;
+                    }
+                }
+                else{
+                    ordersToDelete[j]=orders[j];
+                }
+            }
+
+            //shift
+            uint length = orders.length;
+            for(j=0; j<length-toShift; j++)
+            {//swap
+                (orders[j], orders[j+toShift+1])=(orders[j+toShift+1], orders[j]);
+            }
+
+            //pop from last
+            for(j=length-1; j>=length-toShift; j--){
+                orders.pop();
+            }
+
+
+    }
+
+}

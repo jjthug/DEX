@@ -101,15 +101,13 @@ describe.skip("OrderBook", accounts => {
         let length = await dex.getOrderBook(web3.utils.utf8ToHex("Aave"), 0);
         assert( length == 0, "length of BUY orderbook is 0");
         
-        await dex.createMarketOrder(1, web3.utils.utf8ToHex("Aave"), 5, 3,{from: accounts[1]});
+        await dex.createOrderLimit(1, web3.utils.utf8ToHex("Aave"), 5, 3,{from: accounts[1]});
 
         await dex.createMarketOrder(0, web3.utils.utf8ToHex("Aave"), 12);
 
         let orderBook = await dex.getOrderBook(web3.utils.utf8ToHex("Aave"), 0);
         assert(orderBook[0].filled == 5);
         assert(orderBook[0].amount == 12);
-
     })
-
 
 })

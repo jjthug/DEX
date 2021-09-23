@@ -33,7 +33,7 @@ contract wallet is Ownable{
         balances[msg.sender]["ETH"] += amount;
     }
 
-    function withdraw(bytes32 ticker, uint amount) external tokenExists(ticker) {
+    function withdraw(bytes32 ticker, uint amount) internal tokenExists(ticker) {
         require(balances[msg.sender][ticker] >= amount, "Insufficient balance");
         balances[msg.sender][ticker] -= amount;
         IERC20(tokenMapping[ticker].tokenAddress).transfer(msg.sender, amount);
